@@ -33,6 +33,14 @@ import { D3MTrueFiV1Plan } from "../plans/D3MTrueFiV1Plan.sol";
 import { AddressRegistry }   from "../tests/integration/AddressRegistry.sol";
 import { D3MPlanBaseTest, Hevm } from "./D3MPlanBase.t.sol";
 
+library Assertions {
+    function assertFalse(bool condition) internal {
+        if (condition) {
+            revert("Assertion failed");
+        }
+    }
+}
+
 contract D3MTrueFiV1PlanTest is AddressRegistry, D3MPlanBaseTest {
     PortfolioFactoryLike portfolioFactory;
     PortfolioLike portfolio;
@@ -78,7 +86,7 @@ contract D3MTrueFiV1PlanTest is AddressRegistry, D3MPlanBaseTest {
 
     function test_is_inactive_while_portfolio_is_closed() public {
         hevm.warp(block.timestamp + 30 days + 1 seconds);
-        assertTrue(!D3MTrueFiV1Plan(d3mTestPlan).active());
+        Assertions.assertFalse(D3MTrueFiV1Plan(d3mTestPlan).active());
     }
 
     function test_is_inactive_while_portfolio_is_frozen() public {
@@ -91,7 +99,7 @@ contract D3MTrueFiV1PlanTest is AddressRegistry, D3MPlanBaseTest {
         hevm.warp(block.timestamp + 1 days + 1 seconds);
         portfolio.markLoanAsDefaulted(loanId);
 
-        assertTrue(!D3MTrueFiV1Plan(d3mTestPlan).active());
+        Assertions.assertFalse(D3MTrueFiV1Plan(d3mTestPlan).active());
     }
 
     /*****************************/
@@ -112,7 +120,7 @@ contract D3MTrueFiV1PlanTest is AddressRegistry, D3MPlanBaseTest {
     function _setUpTrueFiDaiPortfolio() internal {
         portfolioFactory = PortfolioFactoryLike(MANAGED_PORTFOLIO_FACTORY_PROXY);
 
-                // Whitelist this address in managed portfolio factory so we can create portfolio
+        // Whitelist this address in managed portfolio factory so we can create portfolio
         hevm.store(MANAGED_PORTFOLIO_FACTORY_PROXY, keccak256(abi.encode(address(this), 6)), bytes32(uint256(1)));
         hevm.store(GLOBAL_WHITELIST_LENDER_VERIFIER, keccak256(abi.encode(address(this), 2)), bytes32(uint256(1)));
 
