@@ -106,7 +106,6 @@ interface PortfolioLike is ERC20Like {
         Frozen,
         Closed
     }
-
     function manager() external view returns (address);
     function getAmountToMint(uint256 amount) external view returns (uint256);
     function getStatus() external view returns (PortfolioStatus);
@@ -117,6 +116,8 @@ interface PortfolioLike is ERC20Like {
     function markLoanAsDefaulted(uint256 instrumentId) external;
     function deposit(uint256 depositAmount, bytes memory metadata) external;
     function getOpenLoanIds() external view returns (uint256[] memory);
+    function withdraw(uint256 sharesAmount, bytes memory) external returns (uint256);
+    function totalDeposited() external view returns (uint256);
 }
 
 interface WhitelistVerifierLike {
