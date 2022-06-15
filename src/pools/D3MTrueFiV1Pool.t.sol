@@ -38,8 +38,6 @@ import { D3MPoolBaseTest, Hevm } from "./D3MPoolBase.t.sol";
 contract D3MTrueFiV1PoolTest is AddressRegistry, D3MPoolBaseTest {
     PortfolioFactoryLike portfolioFactory;
     PortfolioLike portfolio;
-    address d3mTestPoolSignatureOnly;
-    PortfolioLike portfolioSignatureOnly;
     address constant BORROWER = 0x4E02FBA7b1ad4E54F6e5Edd8Fee6D7e67E4a214a; // random address
 
     function setUp() public override {
@@ -60,10 +58,6 @@ contract D3MTrueFiV1PoolTest is AddressRegistry, D3MPoolBaseTest {
         hevm.store(GLOBAL_WHITELIST_LENDER_VERIFIER, keccak256(abi.encode(this, 2)), bytes32(uint256(1)));
         _mintTokens(DAI, address(this), 10 ether);
         dai.approve(address(portfolio), 10 ether);
-
-        // create test pool where underlying portfolio has SignatureOnlyLenderVerifier
-        d3mTestPoolSignatureOnly = address(new D3MTrueFiV1Pool(address(dai), address(portfolioSignatureOnly), hub));
-        _mintTokens(DAI, address(d3mTestPoolSignatureOnly), 10 ether);
     }
 
     function test_deposit_transfers_funds() public {
@@ -76,6 +70,15 @@ contract D3MTrueFiV1PoolTest is AddressRegistry, D3MPoolBaseTest {
     }
 
     function test_deposit_transfers_funds_signature_only() public {
+        // deploy portfolio with signature only lender verifier
+        portfolioFactory.createPortfolio("TrueFi-D3M-DAI-SIGNATURE", "TDS", ERC20Like(DAI), WhitelistVerifierLike(SIGNATURE_ONLY_LENDER_VERIFIER), 30 days, 1_000_000 ether, 20);
+        uint256 portfoliosCount = portfolioFactory.getPortfolios().length;
+        PortfolioLike portfolioSignatureOnly = PortfolioLike(portfolioFactory.getPortfolios()[portfoliosCount - 1]);
+
+        // create test pool where underlying portfolio has SignatureOnlyLenderVerifier
+        address d3mTestPoolSignatureOnly = address(new D3MTrueFiV1Pool(address(dai), address(portfolioSignatureOnly), hub));
+        _mintTokens(DAI, address(d3mTestPoolSignatureOnly), 10 ether);
+
         uint256 fundsBefore = dai.balanceOf(d3mTestPoolSignatureOnly);
         D3MTrueFiV1Pool(d3mTestPoolSignatureOnly).deposit(1 ether);
         uint256 fundsAfter = dai.balanceOf(d3mTestPoolSignatureOnly);
@@ -227,15 +230,9 @@ contract D3MTrueFiV1PoolTest is AddressRegistry, D3MPoolBaseTest {
 
         // deploy portfolio with global whitelist lender verifier
         portfolioFactory.createPortfolio("TrueFi-D3M-DAI", "TDD", ERC20Like(DAI), WhitelistVerifierLike(GLOBAL_WHITELIST_LENDER_VERIFIER), 30 days, 1_000_000 ether, 20);
-
-        // deploy portfolio with signature only lender verifier
-        portfolioFactory.createPortfolio("TrueFi-D3M-DAI-SIGNATURE", "TDS", ERC20Like(DAI), WhitelistVerifierLike(SIGNATURE_ONLY_LENDER_VERIFIER), 30 days, 1_000_000 ether, 20);
         
         uint256 portfoliosCount = portfolioFactory.getPortfolios().length;
-        portfolio = PortfolioLike(portfolioFactory.getPortfolios()[portfoliosCount - 2]);
-        portfolioSignatureOnly = PortfolioLike(portfolioFactory.getPortfolios()[portfoliosCount - 1]);
-
-
+        portfolio = PortfolioLike(portfolioFactory.getPortfolios()[portfoliosCount - 1]);
     }
 
     function _mintTokens(address token, address account, uint256 amount) internal {
