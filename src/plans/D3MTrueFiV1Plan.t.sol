@@ -33,14 +33,6 @@ import { D3MTrueFiV1Plan } from "../plans/D3MTrueFiV1Plan.sol";
 import { AddressRegistry }   from "../tests/integration/AddressRegistry.sol";
 import { D3MPlanBaseTest, Hevm } from "./D3MPlanBase.t.sol";
 
-library Assertions {
-    function assertFalse(bool condition) internal {
-        if (condition) {
-            revert("Assertion failed");
-        }
-    }
-}
-
 contract D3MTrueFiV1PlanTest is AddressRegistry, D3MPlanBaseTest {
     PortfolioFactoryLike portfolioFactory;
     PortfolioLike portfolio;
@@ -86,7 +78,7 @@ contract D3MTrueFiV1PlanTest is AddressRegistry, D3MPlanBaseTest {
 
     function test_is_inactive_while_portfolio_is_closed() public {
         hevm.warp(block.timestamp + 30 days + 1 seconds);
-        Assertions.assertFalse(D3MTrueFiV1Plan(d3mTestPlan).active());
+        assertFalse(D3MTrueFiV1Plan(d3mTestPlan).active());
     }
 
     function test_is_inactive_while_portfolio_is_frozen() public {
@@ -99,7 +91,7 @@ contract D3MTrueFiV1PlanTest is AddressRegistry, D3MPlanBaseTest {
         hevm.warp(block.timestamp + 1 days + 1 seconds);
         portfolio.markLoanAsDefaulted(loanId);
 
-        Assertions.assertFalse(D3MTrueFiV1Plan(d3mTestPlan).active());
+        assertFalse(D3MTrueFiV1Plan(d3mTestPlan).active());
     }
 
     /*****************************/
@@ -138,5 +130,15 @@ contract D3MTrueFiV1PlanTest is AddressRegistry, D3MPlanBaseTest {
             keccak256(abi.encode(account, slot)),
             bytes32(dai.balanceOf(address(account)) + amount)
         );
+    }
+
+    /***************************/
+    /*** Assertion Functions ***/
+    /***************************/
+
+    function assertFalse(bool condition) internal {
+        if (condition) {
+            revert("Assertion failed");
+        }
     }
 }
